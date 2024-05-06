@@ -11,11 +11,13 @@ friends = [] # Used to group friends together
 
 prioritetHoy = [tuple(x) for x in df.itertuples(index=False, name=None) if x[3] == "Dette har jeg veldig lyst til"]
 prioritetLav = [tuple(x) for x in df.itertuples(index=False, name=None) if x[3] == "Dette har jeg litt lyst til"]
-print(prioritetHoy[0], type(prioritetHoy[0]))
+print(prioritetHoy[0], type(prioritetHoy[0]), "\n\n")
 # print(prioritetLav[0])
 
 # Setter opp aktiviteter med maks antall deltagere:
-fordeling = {"emel": [], "anne marie": [], "sveinung": [], "natasha": [], "elisabeth": [], "andreas": []}
+fordeling = {"emel": [], "anne marie": [], "sveinung": [], "natasha": [], "elisabeth": [], "andreas": [], "unresolved": []}
+fordelingMax = {"emel": 12, "anne marie": 30, "sveinung": 25, "natasha": 50, "elisabeth": 8, "andreas": 100, "unresolved": 1000000}
+
 emelMax = 12
 anneMarieMax = 30
 sveinungMax = 25
@@ -35,6 +37,7 @@ count = Counter(x[0] for x in prioritetHoy) # [(name, count)]
 
 # Creating a dict with students sorted by how many wishes they have
 gruppert = {key: [] for key in range(1,11)}
+# placing each activity-application(i.e. student name) in their respective wich counts
 for student, wishes in count.items(): # trenger jeg lage 'gruppert' eller kan jeg bruke count.items() direkte? -> NEI
     gruppert[wishes].append(student)
 # print(gruppert)
@@ -47,13 +50,16 @@ for student, wishes in count.items(): # trenger jeg lage 'gruppert' eller kan je
 
 for wishes in range(1,11):
     random.shuffle(gruppert[wishes]) # Randomizes lists
+    # Placing students with only one wish
     if wishes == 1:
+        # gruppert[1] contains all students with only one wish
         for student in list(gruppert[1]): # type(gruppert) er dict, type(student) er str ; gruppert[1] er studentens navn
             for application in list(prioritetHoy):
                 if student == application[0]:
                     #print(gruppert[wishes][student])
                     #print(student, "\n", application)
                     gruppert[wishes].remove(student)
+                    if fordeling[application[2].lower].len() < 
                     fordeling[application[2].lower()].append(application)
                     prioritetHoy.remove(application) #redundant (bør løses for senere justeringer)
                     #del gruppert[wishes][student]

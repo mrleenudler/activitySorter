@@ -1,0 +1,22 @@
+
+
+*Hver oppføring i excel-filen er ett ønske
+*Tar inn excel-fil som dataFrame (df) - Den er en dict?
+* Fordeler ønskerne i "mye" og "litt"
+-> prioritetHoy (list of tuples)
+-> prioritetLav (list of tuples)
+* Oppretter grupper for aktiviteter
+-> fordeling {"emel": [] ...} - dict: list-of-tuples
+-> maksVerdier for gruppestørrelse - dict~fordeling
+*teller opp antall ønsker for hver aktivitet
+-> count
+* Lager grupper av studenter-ønsker etter hvor mange ønsker de har
+-> gruppert
+
+*  stokker om på 'gruppert'
+* wishes == 1 --> Fyller elever med bare ett ønske i grupper
+
+_____________________________________________________________
+Må fjerne oppføringer tilhørende fulle grupper
+Iterere gjennom 'wishes'? (unødvendig if-setning?)
+
