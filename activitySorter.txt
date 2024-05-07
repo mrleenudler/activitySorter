@@ -2,6 +2,10 @@
 
 *Hver oppføring i excel-filen er ett ønske
 *Tar inn excel-fil som dataFrame (df) - Den er en dict?
+*Setter maks antall aktiviteter pr elev
+-> maxActivitiesPerStudent (SKAL VÆRE USER INPUT)
+*lager set med alle elever
+-> allePaameldteElever
 * Fordeler ønskerne i "mye" og "litt"
 -> prioritetHoy (list of tuples)
 -> prioritetLav (list of tuples)
@@ -10,8 +14,10 @@
 -> maksVerdier for gruppestørrelse - dict~fordeling
 *teller opp antall ønsker for hver aktivitet
 -> count
-* Lager grupper av studenter-ønsker etter hvor mange ønsker de har
--> gruppert
+* Lager grupper av studenter-ønsker etter hvor mange ønsker de har (dict)
+-> gruppertLav, gruppertHoy
+* Elever uten høyprioritetsønsker, og bare ett lavprioritetsønske flyttes til høyprioritet
+
 
 *  stokker om på 'gruppert'
 * wishes == 1 --> Fyller elever med bare ett ønske i grupper
@@ -19,4 +25,14 @@
 _____________________________________________________________
 Må fjerne oppføringer tilhørende fulle grupper
 Iterere gjennom 'wishes'? (unødvendig if-setning?)
+Lage liste med elever som er ferdig plassert
 
+
+USER INPUT: maks_antall_aktiviteter_pr_elev
+USER INPUT: indeks for 'navn', 'klasse', 'aktivitet', 'prioritet', 'venner'
+USER INPUT: syntaks for høy/lav prioritet (?)
+docstring som forklarer programmet
+
+______________________________________________________________
+Eventuelt:
+Implementere numerisk prioritet (antall ønsker er fremdeles relevant)
