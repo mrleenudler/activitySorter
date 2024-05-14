@@ -11,21 +11,33 @@
 -> prioritetLav (list of tuples)
 * Oppretter grupper for aktiviteter
 -> fordeling {"emel": [] ...} - dict: list-of-tuples
--> maksVerdier for gruppestørrelse - dict~fordeling
+-> fordelingMax for gruppestørrelse - dict~fordeling
+-> eleverMedBekreftedeAktiviteter - dict over elever med antall bekreftede aktiviteter
 *teller opp antall ønsker for hver aktivitet
 -> count
 * Lager grupper av studenter-ønsker etter hvor mange ønsker de har (dict)
--> gruppertLav, gruppertHoy
+	! Hver elev forekommer bare én gang 
+	-> Skal elevene re-countes eller replasseres i dicten?
+	! Elever med presis 2 ønsker bør prioriteres for disse, men noen kan ha flere ønsker med kombinert prioritet.
+	! Trenger kanskje en dict for ønsker totalt
+-> gruppertLav, gruppertHoy, gruppertTotal
 * Elever uten høyprioritetsønsker, og bare ett lavprioritetsønske flyttes til høyprioritet
-
+	!! Ønsker ikke å tillate dette i ferdig versjon (men kanskje det er lurt å implementere det likevel? Ingen skade skjedd om det kan håndteres)
 
 *  stokker om på 'gruppert'
 * wishes == 1 --> Fyller elever med bare ett ønske i grupper
 
+____________________________________________________________
+Må flytte applications til aktivitesgruppe
+Deretter redusere antall applications for aktuell elev
+
+
 _____________________________________________________________
 Må fjerne oppføringer tilhørende fulle grupper
 Iterere gjennom 'wishes'? (unødvendig if-setning?)
-Lage liste med elever som er ferdig plassert
+Må lage funksjonalitet for å gruppere aktiviteter på dager (-> Redigere aktivitetsnavn t.eks. "voleyball-mandag" ?)
+	Funksjonalitet for å post-hoc fordele aktiviteter på dager? Kan gå gjennom aktivitetene for å fordele på dager når programmet kjøres, starter med fulle/populære aktiviteter
+	(Ønsker ikke å begrense mulighetene før )
 
 
 USER INPUT: maks_antall_aktiviteter_pr_elev

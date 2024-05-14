@@ -2,6 +2,7 @@ import pandas as pd
 from collections import Counter
 import random
 
+# target Excelark bør være userInput
 df = pd.read_excel('testaktivitet.xlsx')
 fulltNavn = df['Fullt navn'].tolist() # unique Identifier
 klasse = df['Klasse'].tolist() # Class
@@ -9,24 +10,32 @@ larer = df['Aktivitet'].tolist() # Acting as wanted group
 priority = df['Prioritet'] # Wishes are sorted by priority
 friends = [] # Used to group friends together
 
-maxActivitiesPerStudent = 2
-allePaameldteElever = set(fulltNavn)
+# Flere verdier kan være userInput -> GUI vurderes etter hvert
+maxActivitiesPerStudent = 2 # Bør være userInput
+maxApplicationsPerStudent = 10 # Bør hentes fra Excelark
+allePaameldteElever = set(fulltNavn) # Kanskje heller set(df['Fullt navn'].tolist())
+
 # All applications are sorted into groups according to priority (kan programmet endres til numerisk prioritet?)
 prioritetHoy = [tuple(x) for x in df.itertuples(index=False, name=None) if x[3] == "Dette har jeg veldig lyst til"]
 prioritetLav = [tuple(x) for x in df.itertuples(index=False, name=None) if x[3] == "Dette har jeg litt lyst til"]
+allApplications = [tuple(x) for x in df.itertuples(index=False, name=None)]
 # print(prioritetHoy[0], type(prioritetHoy[0]), "\n\n")
 # print(prioritetLav[0])
 
 # Setter opp aktiviteter med maks antall deltagere:
+# NB! Bør hentes fra excel/dataframe 
 fordeling = {"emel": [], "anne marie": [], "sveinung": [], "natasha": [], "elisabeth": [], "andreas": [], "unresolved": []}
+# NB! Bør være userInput
 fordelingMax = {"emel": 12, "anne marie": 30, "sveinung": 25, "natasha": 50, "elisabeth": 8, "andreas": 100, "unresolved": 1000000}
+# Dict som holder oversikt over hvor mange aktiviteter en elev er meldt på. 
+eleverMedBekreftedeAktiviteter = {elev: 0 for elev in allePaameldteElever}
 
-emelMax = 12
-anneMarieMax = 30
-sveinungMax = 25
-natashaMax = 50
-elisabethMax = 8
-andreasMax = 100
+# emelMax = 12 # Redundant -> slett
+# anneMarieMax = 30
+# sveinungMax = 25
+# natashaMax = 50
+# elisabethMax = 8
+# andreasMax = 100
 
 # Tilfeldig trekning mellom elevønsker
 # Elever med få ønsker må prioriteres
@@ -35,6 +44,7 @@ andreasMax = 100
 # Sorterer elevene i grupper etter antall ønsker - DONE
 
 # May want this as a function
+# gruppertHoy/Lav is now redundant?
 # Count occurrences of each unique ID (assuming ID is at index 0 in your tuples)
 countHoy = Counter(x[0] for x in prioritetHoy) # [(name, count)]
 # Creating a dict with students sorted by how many wishes they have (High priority)
@@ -42,33 +52,43 @@ gruppertHoy = {key: [] for key in range(0,11)}
 # placing each activity-application(i.e. student name) in their respective wich counts
 for student, wishes in countHoy.items(): # trenger jeg lage 'gruppertHoy' eller kan jeg bruke count.items() direkte? -> NEI
     gruppertHoy[wishes].append(student)
-# repeating for low priority
+# Creating a dict with students sorted by how many wishes they have (Low priority)
 countLav = Counter(x[0] for x in prioritetLav) # [(name, count)]
 gruppertLav = {key: [] for key in range(0,11)}
 for student, wishes in countLav.items():
     gruppertLav[wishes].append(student)
+# Creating a dict with students sorted by how many wishes they have (Total)
+countAll = Counter(x[0] for x in allApplications)
+gruppertTotal = {key: [] for key in range(0,11)}
+for student, wishes in countAll.items():
+    gruppertTotal[wishes].append(student)
 # print(gruppertHoy[3])
 # print(gruppertLav[3])
 # print(gruppertHoy.keys())
 # print(gruppertHoy.values()) #dict
 #print(gruppertHoy[1]) # TEST: printer alle elever med ett ønske.
 
+# List of all students. Useed to sort out students with no high-priority wishes, and if possible, bump up a low priority wish
+# Identifying students without any wishes (REDO LOGIC)
 noWishList = list(allePaameldteElever)
 
 # Creating list of students with no high-priority applications
+    # Blir denne redundant med gruppertAll / allApplications ??
 for elev in allePaameldteElever:
-    for wishes in range(1,11):
+    for wishes in range(1,11): # max range bør hentes fra Excelark
         if elev in gruppertHoy[wishes]:
             noWishList.remove(elev) # funker, elever som ikke har noen høy-prioritet ønsker blir igjen i listen
 # Moving students without high-priority wishes, and only one low priority wish to high-priority list
-# Kan denne generaliseres? Kanskje som en function? Ta inn wishes som argument?
+    # Kan denne generaliseres? Kanskje som en function? Ta inn wishes som argument?
 for elev in list(noWishList):
-    if elev in gruppertLav[1]:
+    if elev in gruppertLav[1]: 
+        # Bumping students from low to high priority, if no high-priority wish exists
         gruppertHoy[1].append(elev)
         gruppertLav[1].remove(elev)
+        # noWishList now contains students with no wishes at all, yet still in the database (i.e. no priority selection allowed in form)
         noWishList.remove(elev) # ser ut til å funke
         #print(f"elev {elev} flyttes")
-#print(noWishList)
+# print(noWishList) # TEST - to elever på lista har erken høy- eller lav-prioritets ønsker (skal ikke forekomme(?) i ferdig produkt)
 #print("\n\n", gruppertLav[1])
 # NB: Dette skjer før fordelingen
 
@@ -79,7 +99,7 @@ for elev in list(noWishList):
 #Making a random draw for each activity
 # Gruppert viser bare hvor mange ønsker en elev har. Ønskene må hentes fra prioritetHøy
 
-# Students without high-priority wishes are collected from low-priority
+# Students without high-priority wishes are collected from low-priority -> redundant?
 # lage function av denne?
 for elev in allePaameldteElever:
     #elev må sjekkes mot hele prioritetHøy eller gruppertHøy
@@ -97,34 +117,177 @@ for elev in allePaameldteElever:
             pass
             #print(elev)
 
+# DEBUG - alle elever telles
+# counter = 0
+# for i in allApplications:
+#     print(i[0])
+#     counter += 1
+# print(counter, "students")
 
-for wishes in range(1,11):
-    random.shuffle(gruppertLav[wishes]) # Randomizes lists
-    random.shuffle(gruppertHoy[wishes]) # Randomizes lists
-    # Placing students with only one wish
-    if wishes == 1:
-        # gruppertHoy[1] contains all students with only one high-priority wish
-        for student in list(gruppertHoy[1]): # type(gruppertHoy) er dict, type(student) er str ; gruppertHoy[1] er studentens navn
-            for application in list(prioritetHoy):
-                if student == application[0]:
-                    #print(gruppertHoy[wishes][student])
-                    #print(student, "\n", application)
-                    gruppertHoy[wishes].remove(student)
-                    #print("\t TEST", type(prioritetHoy.index(application)))
-                    #print("\t", application[2].lower()) #ønsket aktivitet
-                    #print(len(fordeling[application[2].lower()])) # 
-                    #print("\t TEST: ", len(fordeling[application[2].lower()]), fordelingMax[application[2]])
-                    # Move application into activity group, if not full
-                    if len(fordeling[application[2].lower()]) < fordelingMax[application[2].lower()]:
-                        fordeling[application[2].lower()].append(application)
+random.shuffle(prioritetHoy) # Shuffleing the applications for fair draw (necessary?)
+random.shuffle(prioritetLav)
+
+# DEBUG
+counter = 0 
+for application in allApplications: # Counting totalApplications -> OK (407)
+    counter += 1
+print("Total applications: ", counter)
+counter = 0
+for applications in gruppertTotal: # counting totalApplication from gruppertTotal -> OK
+    #print(len(gruppertTotal[applications]))
+    counter += applications * len(gruppertTotal[applications])
+print("Total applications from gruppertTotal: ", counter)
+counter = 0
+for application in allApplications: # student is of type tuple
+    for name in gruppertTotal[1]:
+        if name == application[0]:
+            counter +=1
+print("Counting students with 1 application. Expected: 245: ", counter)
+
+# Randomizing name lists for fair draw
+for i in range(0, maxApplicationsPerStudent):
+    random.shuffle(gruppertTotal[i])
+# Students with 1 application assigned to activity
+for application in list(allApplications): # student is of type tuple | list() to avoid mutating while handling (?)
+    # Iterating through students with only one application
+    for name in gruppertTotal[1]:
+        if name == application[0]:
+            counter +=1
+            for activity in fordeling:
+                if activity == application[2].lower():
+                    # Checking if activity is full, and if so, placing application in 'unresolved'
+                    if len(fordeling[activity]) <= fordelingMax[activity]:
+                        # Assigning names to activity group
+                        fordeling[activity].append(name)
+                        # Increasing student activity count
+                        eleverMedBekreftedeAktiviteter[name] += 1
+                        # removing placed applications
+                        allApplications.remove(application)
                     else:
-                        # If desired group is full
-                        fordeling["unresolved"].append(application)
-                    prioritetHoy.remove(application) #redundant (bør løses for senere justeringer)
-                    #del gruppertHoy[wishes][student]
-                    # Legg application til fordeling
-                    # fjern student fra gruppertHoy
-                    # fjern application fra prioritetHøy
+                        # Pass på at ingen som har flere alternativer blir plassert her
+                        # Gjelder kanskje bare elever med ett valg?
+                        fordeling["unresolved"].append(name)
+                        # Next line: disabled because no activity is assigned.
+                        # eleverMedBekreftedeAktiviteter[name] += 1
+                        # Application must be removed, even if the activity is full
+                        allApplications.remove(application) 
+#Iterating through students with two applications (nummber of total applications have been reduced)
+for application in allApplications: 
+    for name in gruppertTotal[2]:
+        # fortsett her med å trekke aktiviteter for elever med 2 ønsker
+        # Sjekk for elever om har mistet ett av ønskene sine. 
+        # Legg inn funksjon for å rydde bort aktiviteter som er fulle, 
+            # Eventuelt nedjustere antall ønsker elevene har.
+        # Kanskje dumt å fortsette å iterere gjennom applications. Den er blitt redusert
+        pass 
+        
+#DEBUG
+counter = 0
+for elev in eleverMedBekreftedeAktiviteter:
+    counter += eleverMedBekreftedeAktiviteter[elev]
+print("eleverMedBekreftedeAktiviteter, expected 245/407(139/???) minus unresolved: ", counter)
+counter = 0
+for application in allApplications:
+    counter +=1
+print("Expected applications after 1st pass 407-245=162 ", counter)
+
+
+
+# for navn in gruppertTotal[1]:
+#     print(navn)
+
+# for application in allApplications:
+#     #print(application[0]) Printer navn til alle applications
+#     if application[0] in gruppertTotal[1]:
+#         print(application) #NEI!  Printer alle elever med 1 application/ønske
+#         # flere applications med samme navn -> flere oppføringer (skulle ikek skje)
+
+
+# while maxApplicationsPerStudent > 0: #  macApplicationsPerStudent == 10
+#     # gruppertLav og gruppertHoy erstattes mest sannsynlig av prioritetLav og prioritetHoy
+#     # random.shuffle(gruppertLav[1]) # Randomizes lists
+#     # random.shuffle(gruppertHoy[1]) # Randomizes lists
+#     random.shuffle(gruppertTotal[1]) # Randomizes currents list
+#     # Moves all students 1 down in number of applications -> Is this what I want?
+#     # I want to select a random student and place in activityGroup, then reduce number of applications for this student
+#     # Students with 1-2 applications go first
+#     for student in list(gruppertTotal[1]): #type string - bør den være list(gruppertTotal[1]) ??
+#         # gruppertTotal[1].pop(gruppertTotal[1].index(student)) #Removes student from group with 1 application/wish
+#         gruppertTotal[1].remove(student) #Bedre enn pop
+#         if eleverMedBekreftedeAktiviteter[student] <= maxActivitiesPerStudent: # Irrelevant for 1-2 applications
+#             # all True print(eleverMedBekreftedeAktiviteter[student] <= maxActivitiesPerStudent)
+
+#             for activity in fordeling:
+#                 if len(fordeling[activity]) <= fordelingMax[activity] and activity == allApplications.index():
+#                     fordeling[activity].append(student)
+#                     counter += 1
+#                     eleverMedBekreftedeAktiviteter[student] += 1
+#                     #print(activity, student)
+#                     # print(allApplications[0].index(student)) # Gir denne riktig treff?
+#             print(eleverMedBekreftedeAktiviteter[student])
+#         else: 
+#             print("\n\nALL WISHES FULFILLED")
+#     maxApplicationsPerStudent -= 1
+
+# DEBUG
+# for elev in eleverMedBekreftedeAktiviteter:
+#     print(elev, eleverMedBekreftedeAktiviteter[elev])
+
+# DEBUG
+counter = 0
+for activity in fordeling:
+#     for elev in fordeling[activity]:
+#         print(elev, activity)
+    print(activity, len(fordeling[activity]))
+    counter += len(fordeling[activity])
+print(counter)
+#print(fordeling)
+    # for i in range(0, maxApplicationsPerStudent):
+    #     #print("\n", i , "\n")
+    #     for student in list(gruppertTotal[i]): #list() nødvendig eller unødvendig?
+    #         # student in gruppertTotal må endre indeks.
+    #         # En application må også plasseres i aktivitetsgruppe 
+    #         #print(student, len(gruppertTotal[i]))
+    #         if i > 1:
+    #             gruppertTotal[i-1].append(student)
+    #         counter += 1
+    # maxApplicationsPerStudent -= 1
+
+#print(counter) #DEBUG - teller studenter, ikke applications
+
+# # Erstattes av while
+# for wishes in range(1,maxApplicationsPerStudent): # Egen løkke for applications <= maxActivitiesPrStudent ? 
+#     random.shuffle(gruppertLav[wishes]) # Randomizes lists
+#     random.shuffle(gruppertHoy[wishes]) # Randomizes lists
+#     random.shuffle(gruppertTotal[wishes]) # Randomizes lists
+#     # Placing students with only one wish
+#     if wishes == 1:
+#         # gruppertTotal[1] contains all students with only one wish in total
+#         for student in list(gruppertHoy[1]): # type(gruppertHoy) er dict, type(student) er str ; gruppertHoy[1] er studentens navn
+#             #for application in list(prioritetHoy):
+#             for application in list(allApplications):
+#                 if student == application[0]:
+#                     #print(gruppertHoy[wishes][student])
+#                     #print(student, "\n", application)
+#                 #gruppertHoy[wishes].remove(student)
+#                     gruppertTotal[wishes].remove(student) # NB! vil fjerne alle ønskene til en elev på én gang!!! (ikke bra, må fjerne bare relevant ønske)
+#                     # NB student må fjernes fra respektiv prioritet Høy/Lav gruppe også
+#                     #print("\t TEST", type(prioritetHoy.index(application)))
+#                     #print("\t", application[2].lower()) #ønsket aktivitet
+#                     #print(len(fordeling[application[2].lower()])) # 
+#                     #print("\t TEST: ", len(fordeling[application[2].lower()]), fordelingMax[application[2]])
+
+#                     # Move application into activity group, if not full
+#                     if len(fordeling[application[2].lower()]) < fordelingMax[application[2].lower()]:
+#                         fordeling[application[2].lower()].append(application)
+#                     else:
+#                         # If desired group is full
+#                         fordeling["unresolved"].append(application)
+#                     prioritetHoy.remove(application) #redundant (bør løses for senere justeringer)
+#                     #del gruppertHoy[wishes][student]
+#                     # Legg application til fordeling
+#                     # fjern student fra gruppertHoy
+#                     # fjern application fra prioritetHøy
 
 # print(fordeling["emel"], "\n\n\n")
 # print(gruppertHoy, "\n\n\n")
