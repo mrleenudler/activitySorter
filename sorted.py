@@ -2,6 +2,8 @@ import pandas as pd
 from collections import Counter
 import random
 
+# def __init__
+
 # target Excelark bør være userInput
 df = pd.read_excel('testaktivitet.xlsx')
 fulltNavn = df['Fullt navn'].tolist() # unique Identifier
@@ -11,14 +13,28 @@ priority = df['Prioritet'] # Wishes are sorted by priority
 friends = [] # Used to group friends together
 
 # Flere verdier kan være userInput -> GUI vurderes etter hvert
+highPriorityString = "Dette har jeg veldig lyst til"
+lowPriorityString = "Dette har jeg litt lyst til"
 maxActivitiesPerStudent = 2 # Bør være userInput
-maxApplicationsPerStudent = 10 # Bør hentes fra Excelark
+# Bør hentes fra Excelark
+maxApplicationsPerStudent = 10 # aka totalNumberOfActivities
 allePaameldteElever = set(fulltNavn) # Kanskje heller set(df['Fullt navn'].tolist())
 
 # All applications are sorted into groups according to priority (kan programmet endres til numerisk prioritet?)
-prioritetHoy = [tuple(x) for x in df.itertuples(index=False, name=None) if x[3] == "Dette har jeg veldig lyst til"]
-prioritetLav = [tuple(x) for x in df.itertuples(index=False, name=None) if x[3] == "Dette har jeg litt lyst til"]
+# kanskje flytte Hoy og Lav til def gruppert
+prioritetHoy = [tuple(x) for x in df.itertuples(index=False, name=None) if x[3] == highPriorityString]
+prioritetLav = [tuple(x) for x in df.itertuples(index=False, name=None) if x[3] == lowPriorityString]
 allApplications = [tuple(x) for x in df.itertuples(index=False, name=None)]
+#Removing redundant applications (midlertidig deaktivert for testing purposes.)
+#allApplications = list(set(allApplications)) # NOT TESTED (reduserer antall applications til 140?)
+# priority groups; built in group_student_applications() 
+# Skal den kalles her?
+
+gruppertHoy = [] # Er disse redundante?
+gruppertLav = []
+gruppertTotal = []
+
+# DEBUG
 # print(prioritetHoy[0], type(prioritetHoy[0]), "\n\n")
 # print(prioritetLav[0])
 
@@ -37,47 +53,109 @@ eleverMedBekreftedeAktiviteter = {elev: 0 for elev in allePaameldteElever}
 # elisabethMax = 8
 # andreasMax = 100
 
-# Tilfeldig trekning mellom elevønsker
-# Elever med få ønsker må prioriteres
+# skal allApplications sendes som input til funksjonen?
+def remove_full_activities_from_applications():
+    # Some activities will be full, and unavailable for further applications
+    listOfFullActivities = [activity for activity in fordeling.keys() if len(fordeling[activity]) >= fordelingMax[activity]]
+    # DEBUG
+    print("Fully signed activities: ", listOfFullActivities)
+    for activity in fordeling: # activity, signed_students, max_students 
+        print(activity)
+        print(len(fordeling[activity]), fordelingMax[activity])
+    print("Lenght of allApplications after removal of first group: ", len(allApplications)) 
+    # print(allApplications[1][2])
+    # # VIKTIG Å SLETTE
+    # if allApplications[1][2].lower() in listOfFullActivities:
+    #     print("True")
+    # allApplications.remove(allApplications[1]) #virker
+    # print(allApplications[1][2])
+    # CODE
+    # Creating set of remaining students in allApplications
+    remainingStudents = set([tup[0] for tup in allApplications]) # LAmbda function?
+    # DEBUG
+    print("Number of remaining students, expected < 20: ", len(remainingStudents)) # actual: 54
+    # print(remainingStudents)
+    #print("Remaining applications\n", allApplications)
+    # CODE 
+    # Removing applications for fully signed activities
+    for application in list(allApplications): # List preventing trouble with mutation while running
+        if application[2].lower() in listOfFullActivities:
+            allApplications.remove(application) #Funker 
+    # DEBUG
+    print("Length of allApplications after clean: ", len(allApplications))
+    # CODE
+    newRemainingStudents = set([tup[0] for tup in allApplications])
+    # DEBUG
+    print("List of remaning students, cleaned for unapplicable applications: ", newRemainingStudents)
+    print("Length of 'unresolved' group before clean: ", len(fordeling["unresolved"]))
+    # CODE
+    # Students which now have no applications left, are moved to "unresolved" group
+    for name in remainingStudents:
+        if name not in newRemainingStudents:
+            # Students that now have all 
+            fordeling['unresolved'].append(name)
+            # Removing unresolved students form list of students (corresponding applications, are they removed?)
+            allePaameldteElever.remove(name) 
+            # DEBUG (funker)
+            # print("Removed ", name)
+            #     print(allePaameldteElever[name])
+            # except:
+            #     print("Successful")
+    print("Length of 'unresolved' group after clean: ", len(fordeling["unresolved"]))
+    # WARNING! Elever kan fjernes helt uten å havne i 'unresolved'
+    # Når den virker, gå tilbake til logikken for 2 ønsker
+
+
 # Elever med bare ett "veldig lyst" ønske må prioriteres til "litt lyst"
 # sorted() kan sortere etter flere variabler på en gang
 # Sorterer elevene i grupper etter antall ønsker - DONE
 
-# May want this as a function
-# gruppertHoy/Lav is now redundant?
-# Count occurrences of each unique ID (assuming ID is at index 0 in your tuples)
-countHoy = Counter(x[0] for x in prioritetHoy) # [(name, count)]
-# Creating a dict with students sorted by how many wishes they have (High priority)
-gruppertHoy = {key: [] for key in range(0,11)}
-# placing each activity-application(i.e. student name) in their respective wich counts
-for student, wishes in countHoy.items(): # trenger jeg lage 'gruppertHoy' eller kan jeg bruke count.items() direkte? -> NEI
-    gruppertHoy[wishes].append(student)
-# Creating a dict with students sorted by how many wishes they have (Low priority)
-countLav = Counter(x[0] for x in prioritetLav) # [(name, count)]
-gruppertLav = {key: [] for key in range(0,11)}
-for student, wishes in countLav.items():
-    gruppertLav[wishes].append(student)
-# Creating a dict with students sorted by how many wishes they have (Total)
-countAll = Counter(x[0] for x in allApplications)
-gruppertTotal = {key: [] for key in range(0,11)}
-for student, wishes in countAll.items():
-    gruppertTotal[wishes].append(student)
-# print(gruppertHoy[3])
-# print(gruppertLav[3])
-# print(gruppertHoy.keys())
-# print(gruppertHoy.values()) #dict
-#print(gruppertHoy[1]) # TEST: printer alle elever med ett ønske.
+def count_applications(applications):
+    # tar inn tuples fra prioritetHoy/Lav
+    groups = {key: [] for key in range(1, maxApplicationsPerStudent)} # 0 applications should not be possible
+    counter = Counter(app[0] for app in applications)
+    for student, wishes in counter.items():
+        groups[wishes].append(student)
+    return groups
+
+
+
+def group_student_applications(priorityString):
+    # bruke allApplications til å lage prioritetHoy/prioritetLav
+    prioritetHoy = [tuple for tuple in allApplications if tuple[3] == highPriorityString]
+    prioritetLav = [tuple for tuple in allApplications if tuple[3] == lowPriorityString]
+    if priorityString:
+        prioritet = [tuple for tuple in allApplications if tuple[3] == priorityString]
+    else: 
+        prioritet = [tuple for tuple in allApplications]
+    # countHigh = Counter(application[0] for application in prioritetHoy)
+    # countLow = Counter(application[0] for application in prioritetLav)
+    # countTotal = Counter(application[0] for application in allApplications)
+    gruppertHoy = count_applications(prioritetHoy)
+    gruppertLav = count_applications(prioritetLav)
+    gruppertTotal = count_applications(allApplications) 
+    gruppert = count_applications(prioritet)
+    return gruppert
+
+
 
 # List of all students. Useed to sort out students with no high-priority wishes, and if possible, bump up a low priority wish
 # Identifying students without any wishes (REDO LOGIC)
 noWishList = list(allePaameldteElever)
 
+gruppertHoy = group_student_applications(highPriorityString) # Tenk på hva jeg skal gjøre med denne
+gruppertLav = group_student_applications(lowPriorityString)
+gruppertTotal = group_student_applications("")
 # Creating list of students with no high-priority applications
     # Blir denne redundant med gruppertAll / allApplications ??
 for elev in allePaameldteElever:
     for wishes in range(1,11): # max range bør hentes fra Excelark
-        if elev in gruppertHoy[wishes]:
-            noWishList.remove(elev) # funker, elever som ikke har noen høy-prioritet ønsker blir igjen i listen
+        try:
+            if elev in gruppertHoy[wishes]:
+                noWishList.remove(elev) # funker, elever som ikke har noen høy-prioritet ønsker blir igjen i listen
+        except:
+            pass
+#            print("Out of range error: ", wishes)
 # Moving students without high-priority wishes, and only one low priority wish to high-priority list
     # Kan denne generaliseres? Kanskje som en function? Ta inn wishes som argument?
 for elev in list(noWishList):
@@ -100,7 +178,8 @@ for elev in list(noWishList):
 # Gruppert viser bare hvor mange ønsker en elev har. Ønskene må hentes fra prioritetHøy
 
 # Students without high-priority wishes are collected from low-priority -> redundant?
-# lage function av denne?
+# lage function av denne? Integrere i def counter?
+# NOT IMPLEMENTED
 for elev in allePaameldteElever:
     #elev må sjekkes mot hele prioritetHøy eller gruppertHøy
     for application in prioritetHoy:
@@ -117,13 +196,8 @@ for elev in allePaameldteElever:
             pass
             #print(elev)
 
-# DEBUG - alle elever telles
-# counter = 0
-# for i in allApplications:
-#     print(i[0])
-#     counter += 1
-# print(counter, "students")
 
+# CODE (redundant?)
 random.shuffle(prioritetHoy) # Shuffleing the applications for fair draw (necessary?)
 random.shuffle(prioritetLav)
 
@@ -144,8 +218,16 @@ for application in allApplications: # student is of type tuple
             counter +=1
 print("Counting students with 1 application. Expected: 245: ", counter)
 
+# CODE 
+# Lages til en metode der elever med få plasseringer / få ønsker prioriteres
+
+# CODE
+# Grouping students by number of applications
+gruppertHoy = group_student_applications(highPriorityString) # Tenk på hva jeg skal gjøre med denne
+gruppertLav = group_student_applications(lowPriorityString)
+gruppertTotal = group_student_applications("")
 # Randomizing name lists for fair draw
-for i in range(0, maxApplicationsPerStudent):
+for i in range(1, maxApplicationsPerStudent):
     random.shuffle(gruppertTotal[i])
 # Students with 1 application assigned to activity
 for application in list(allApplications): # student is of type tuple | list() to avoid mutating while handling (?)
@@ -156,7 +238,7 @@ for application in list(allApplications): # student is of type tuple | list() to
             for activity in fordeling:
                 if activity == application[2].lower():
                     # Checking if activity is full, and if so, placing application in 'unresolved'
-                    if len(fordeling[activity]) <= fordelingMax[activity]:
+                    if len(fordeling[activity]) < fordelingMax[activity]:
                         # Assigning names to activity group
                         fordeling[activity].append(name)
                         # Increasing student activity count
@@ -172,6 +254,9 @@ for application in list(allApplications): # student is of type tuple | list() to
                         # Application must be removed, even if the activity is full
                         allApplications.remove(application) 
 #Iterating through students with two applications (nummber of total applications have been reduced)
+print("Going to remove_applications")
+remove_full_activities_from_applications()
+print("Returning from remove_applications")
 for application in allApplications: 
     for name in gruppertTotal[2]:
         # fortsett her med å trekke aktiviteter for elever med 2 ønsker
@@ -179,7 +264,7 @@ for application in allApplications:
         # Legg inn funksjon for å rydde bort aktiviteter som er fulle, 
             # Eventuelt nedjustere antall ønsker elevene har.
         # Kanskje dumt å fortsette å iterere gjennom applications. Den er blitt redusert
-        pass 
+        pass
         
 #DEBUG
 counter = 0
