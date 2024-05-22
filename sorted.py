@@ -25,6 +25,7 @@ allePaameldteElever = set(fulltNavn) # Kanskje heller set(df['Fullt navn'].tolis
 prioritetHoy = [tuple(x) for x in df.itertuples(index=False, name=None) if x[3] == highPriorityString]
 prioritetLav = [tuple(x) for x in df.itertuples(index=False, name=None) if x[3] == lowPriorityString]
 allApplications = [tuple(x) for x in df.itertuples(index=False, name=None)]
+random.shuffle(allApplications) # Trenger å randomisere for rettferdig fordeling (riktig sted?)
 #Removing redundant applications (midlertidig deaktivert for testing purposes.)
 #allApplications = list(set(allApplications)) # NOT TESTED (reduserer antall applications til 140?)
 # priority groups; built in group_student_applications() 
@@ -122,8 +123,8 @@ def count_applications(applications):
 
 def group_student_applications(priorityString):
     # bruke allApplications til å lage prioritetHoy/prioritetLav
-    prioritetHoy = [tuple for tuple in allApplications if tuple[3] == highPriorityString]
-    prioritetLav = [tuple for tuple in allApplications if tuple[3] == lowPriorityString]
+    prioritetHoy = [tuple for tuple in allApplications if tuple[3] == highPriorityString] # fjernes
+    prioritetLav = [tuple for tuple in allApplications if tuple[3] == lowPriorityString] # fjernes
     if priorityString:
         prioritet = [tuple for tuple in allApplications if tuple[3] == priorityString]
     else: 
@@ -131,23 +132,65 @@ def group_student_applications(priorityString):
     # countHigh = Counter(application[0] for application in prioritetHoy)
     # countLow = Counter(application[0] for application in prioritetLav)
     # countTotal = Counter(application[0] for application in allApplications)
-    gruppertHoy = count_applications(prioritetHoy)
-    gruppertLav = count_applications(prioritetLav)
-    gruppertTotal = count_applications(allApplications) 
+    gruppertHoy = count_applications(prioritetHoy) # fjernes
+    gruppertLav = count_applications(prioritetLav) # fjernes
+    gruppertTotal = count_applications(allApplications) # fjernes
     gruppert = count_applications(prioritet)
     return gruppert
 
+def place_student(studentName):
+# fordeling = {"emel": [], "anne marie": [], "sveinung": [], "natasha": [], "elisabeth": [], "andreas": [], "unresolved": []}
+# fordelingMax = {"emel": 12, "anne marie": 30, "sveinung": 25, "natasha": 50, "elisabeth": 8, "andreas": 100, "unresolved": 1000000}
+# eleverMedBekreftedeAktiviteter = {elev: 0 for elev in allePaameldteElever}
+    # If student is assigned to max number of activities
+    if eleverMedBekreftedeAktiviteter[studentName] >= maxActivitiesPerStudent:
+        allePaameldteElever.remove(studentName)
+        return
+    #currentApplication = None
+    for application in allApplications:
+        if application[0] == studentName:
+            # Removing application and keep searching if activity is full
+            # Skal ikke forekomme for numberOfApplications <= maxActivitiesPerStudent
+                # Men bør være relevant når numberOfApplications > maxActivitiesPerStudent
+            if fordelingMax(application[2]) == len(fordeling(application[2])):
+                allApplications.remove(application)
+                continue # Sjekk at continue funker som forutsatt. 
+            #currentApplication = application
+            allApplications.remove(application)
+            fordeling[application[2]].append(studentName)
+            eleverMedBekreftedeAktiviteter[studentName] += 1
+            return
+    
+            # for group_key in gruppertTotal: #(redundant?)
+            #     # redundant?
+            #     if student in gruppertTotal[group_key]:
+            #         pass
+            #         #gruppertTotal[group_key].remove(student)
+            #         # VIKTIG! 
+            #         # skal eleven fjernes fra gruppen, 
+            #         # eller skal eleven bumpes ned, 
+            #         # eller skal ingenting gjøres, og gruppene gjenopprettes etter hver iterasjon av gruppertTotal i hovedmetoden?
+
+                # if student in group:
+                #     group.remove(student) 
+                # for student in group:
+                #     if student == studentName:
+                #         group.remove(studentName)
+
+    # place in fordeling (pull info from allApplications)
+    # add to eleverMedBekreftedeAktiviteter
+    # # remove from groups ?redundant?
 
 
-# List of all students. Useed to sort out students with no high-priority wishes, and if possible, bump up a low priority wish
-# Identifying students without any wishes (REDO LOGIC)
-noWishList = list(allePaameldteElever)
 
 gruppertHoy = group_student_applications(highPriorityString) # Tenk på hva jeg skal gjøre med denne
 gruppertLav = group_student_applications(lowPriorityString)
 gruppertTotal = group_student_applications("")
 # Creating list of students with no high-priority applications
     # Blir denne redundant med gruppertAll / allApplications ??
+# List of all students. Useed to sort out students with no high-priority wishes, and if possible, bump up a low priority wish
+# Identifying students without any wishes (REDO LOGIC)
+noWishList = list(allePaameldteElever)
 for elev in allePaameldteElever:
     for wishes in range(1,11): # max range bør hentes fra Excelark
         try:
@@ -198,7 +241,7 @@ for elev in allePaameldteElever:
 
 
 # CODE (redundant?)
-random.shuffle(prioritetHoy) # Shuffleing the applications for fair draw (necessary?)
+random.shuffle(prioritetHoy) # Shuffling the applications for fair draw (necessary?)
 random.shuffle(prioritetLav)
 
 # DEBUG
@@ -226,46 +269,154 @@ print("Counting students with 1 application. Expected: 245: ", counter)
 gruppertHoy = group_student_applications(highPriorityString) # Tenk på hva jeg skal gjøre med denne
 gruppertLav = group_student_applications(lowPriorityString)
 gruppertTotal = group_student_applications("")
-# Randomizing name lists for fair draw
-for i in range(1, maxApplicationsPerStudent):
-    random.shuffle(gruppertTotal[i])
-# Students with 1 application assigned to activity
-for application in list(allApplications): # student is of type tuple | list() to avoid mutating while handling (?)
-    # Iterating through students with only one application
-    for name in gruppertTotal[1]:
-        if name == application[0]:
-            counter +=1
-            for activity in fordeling:
-                if activity == application[2].lower():
-                    # Checking if activity is full, and if so, placing application in 'unresolved'
-                    if len(fordeling[activity]) < fordelingMax[activity]:
-                        # Assigning names to activity group
-                        fordeling[activity].append(name)
-                        # Increasing student activity count
-                        eleverMedBekreftedeAktiviteter[name] += 1
-                        # removing placed applications
-                        allApplications.remove(application)
-                    else:
-                        # Pass på at ingen som har flere alternativer blir plassert her
-                        # Gjelder kanskje bare elever med ett valg?
-                        fordeling["unresolved"].append(name)
-                        # Next line: disabled because no activity is assigned.
-                        # eleverMedBekreftedeAktiviteter[name] += 1
-                        # Application must be removed, even if the activity is full
-                        allApplications.remove(application) 
-#Iterating through students with two applications (nummber of total applications have been reduced)
-print("Going to remove_applications")
-remove_full_activities_from_applications()
-print("Returning from remove_applications")
-for application in allApplications: 
-    for name in gruppertTotal[2]:
-        # fortsett her med å trekke aktiviteter for elever med 2 ønsker
-        # Sjekk for elever om har mistet ett av ønskene sine. 
-        # Legg inn funksjon for å rydde bort aktiviteter som er fulle, 
-            # Eventuelt nedjustere antall ønsker elevene har.
-        # Kanskje dumt å fortsette å iterere gjennom applications. Den er blitt redusert
-        pass
+
+# WANT: assigning students with minimum flexibility, recalculating applications and rerun
+# while allApplications:
+    # Minimum flexibility group is distributed (1 application each)
+        # Remember to account for already distributed activities
+    # Clean applications for full activities
+    # Recalculate groups of students according to applications
+applicationCounter = 1
+debugExitCounter = 0
+while allApplications: # trenger continue(?)
+    if debugExitCounter > 5:
+        break
+    debugExitCounter += 1
+    # todelt kode; if applications < maxActivities; else: priorityActivities
+    # First checking students with numberOfApplications <= maxActivitiesPerStudent 
+    # DONE Kanskje gruppene skal justeres med assigned før gjennomgang?
+    print("\n\nBumping up application group according to assigned activities\n\n")
+    # Kan denne for eksempel heller være en "generator expression?"
+    # Bumping up application group according to number of assigned activities
+    studentsWithAssignedActivities = [student for student in eleverMedBekreftedeAktiviteter if eleverMedBekreftedeAktiviteter[student] > 0]
+    for studentName in studentsWithAssignedActivities:
+        for group in gruppertTotal:
+            if studentName in gruppertTotal[group]:
+                gruppertTotal[group].remove(studentName)
+                gruppertTotal[group + studentsWithAssignedActivities[studentName]].append(studentName)
+                print(studentName, "Bumped from", group, "to", group + studentsWithAssignedActivities[studentName])
+
+    # While there are still students to assign that have applications <= maxActivities
+    # Students must be removed from group when fully assigned
+    print("\n\nAssigning students to activities\n\n")
+    exitCounter2 = 0
+    gruppertKeys = [number for number in range(1, maxActivitiesPerStudent + 1)]
+    print("GruppertKeys: ", gruppertKeys)
+    while not all(len(gruppertTotal[group]) == 0 for group in gruppertKeys): # "group in gruppertTotal and" kan legges til for mer robust kode (hindrer KeyError)
+        # DEBUG
+        # Tenk ut en rettferdig algoritme
+            # Skal det kalles en plasseringsmetode? metode(elev, numberOfApplications)
+            # Elever med én application plasseres først, deretter oppdateres listen og gjentas til alle er plassert
+            # Nå gjentar jeg overordnet logikk
+        listOfStudentsWithFewApplications = [gruppertTotal[gruppe] for gruppe in gruppertKeys] # printer elevnavn list-of-lists med index == numberOfApplications
+        print("Debug liste: ", len(listOfStudentsWithFewApplications)) # maxActivitiesPerStudent antall lister med elever
+        if exitCounter2 == 2:
+            break
+        exitCounter2 += 1
+        # CODE
+        # debugList har nå alle elevene med 1 og 2 applications. 
+        # de kan plasseres i fordelt
+        while listOfStudentsWithFewApplications:
+            listIndex = 0
+            for i in range(1, len(listOfStudentsWithFewApplications) + 1):
+                if listOfStudentsWithFewApplications[i]:
+                    listIndex = i
+            for student in listOfStudentsWithFewApplications[i]:
+                place_student(student)
+            # Kontroller at listen regenereres korrekt, spesielt at gruppertTotal[] er oppdatert, og at gruppertKeys er korrekt
+            listOfStudentsWithFewApplications = [gruppertTotal[gruppe] for gruppe in gruppertKeys]
+            clean_applications()
+            recreate_groups() # Skal bare inneholde elever som ikke er ferdig plassert.
+
+        # Er følgende kode redundant?
+
+        # Legg til assigned applications også
+            # -> Når elever er fully assigned, fjernes de fra applications
+            # -> Hva med elever som er partly assigned, men har flere applications?
+            # Lage liste fra assigned for å prioritere elevene?
+        # Må være avhengig av eleverMedBekreftedeAktiviteter[maxActivities]
+        # skal jeg iterere gjennom gruppene her?
+        # Eller lage liste med unassigned elever? begge? 
+        for i in range(1, maxApplicationsPerStudent): # maxActivities??
+            # prøv å kjøre uten list() også
+            # prøver å lage en midlertidig liste av applications fra allApplications
+            
+            # Bør jeg gjøre gruppertX til dict-list-of-tuples? Kan det bli problemer med likhetssjekk?
+            for j in range(1,i): # selecting one student at a time for activity placement, to make it fair
+                pass # Need to find correct application/activity
+            for student in list(gruppertTotal[i]): # NB LÅSER SEG / STOPPER ALDRI
+                # Siden vi jobber med gruppertTotal[ < max], må jeg plassere alle elevene
+                # dvs. vi starter med elevene med høy prioritet.
+                #print("Prøver å skrive ut neste forekomst av elev med høyPri i gruppe [i]", next(tup[0] for tup in allApplications if tup[3] == highPriorityString))
+                print("Prøver å skrive ut neste forekomst av elev med høyPri i gruppe [i]", i, student)
+                # Hvordan finner jeg korrekt application? indexof?
+                for j in range(1,i):
+                    pass
+                    # placing student in all desired activities
+                        # NOT FAIR, one activity at a time is fair
+                gruppertTotal[i].remove(student) # Hvis i > 1, skal ikke eleven fjernes før alle aktiviteter er oppfylt
+                # remove application from allApplications (Kan også gjøres i CLEAN-prosedyren?)
+                    # -> Risikerer jeg multiple oppføringer av samme application?
+                if eleverMedBekreftedeAktiviteter[student] >= maxActivitiesPerStudent:
+                    # append student to 'fordelt'
+                    eleverMedBekreftedeAktiviteter[student] += 1
+                #if student in prioritetHoy[i] # Unødig knotete å traversere denne? (Ikke ment å oppdateres?)
+        # CLEAN ALLaPPLICATIONS FOR FULL GROUPS AND RERUN/CONTINUE
+        for student in gruppertTotal[1]:
+            pass
+            # 1. pri er studenter som ikke har aktiviteter, 
+
+    for applicationCounter in range(1, maxApplicationsPerStudent):
+        if gruppertTotal == applicationCounter:
+            # Skal jeg søke i prioritetHoy? Eller traversere gruppertHoy?
+                # Kanskje prioritetHoy hvis applications > max? 
+            # If allApplications > 2
+            pass
+print("DEBUG EXIT_COUNTER: ", debugExitCounter)
+
+# # Randomizing name lists for fair draw
+# for i in range(1, maxApplicationsPerStudent):
+#     random.shuffle(gruppertTotal[i])
+# # Students with 1 application assigned to activity
+# for application in list(allApplications): # student is of type tuple | list() to avoid mutating while handling (?)
+#     # Iterating through students with only one application
+#     for name in gruppertTotal[1]:
+#         if name == application[0]:
+#             counter +=1
+#             for activity in fordeling:
+#                 if activity == application[2].lower():
+#                     # Checking if activity is full, and if so, placing application in 'unresolved'
+#                     if len(fordeling[activity]) < fordelingMax[activity]:
+#                         # Assigning names to activity group
+#                         fordeling[activity].append(name)
+#                         # Increasing student activity count
+#                         eleverMedBekreftedeAktiviteter[name] += 1
+#                         # removing placed applications
+#                         allApplications.remove(application)
+#                     else:
+#                         # Pass på at ingen som har flere alternativer blir plassert her
+#                         # Gjelder kanskje bare elever med ett valg?
+#                         fordeling["unresolved"].append(name)
+#                         # Next line: disabled because no activity is assigned.
+#                         # eleverMedBekreftedeAktiviteter[name] += 1
+#                         # Application must be removed, even if the activity is full
+#                         allApplications.remove(application) 
+# #Iterating through students with two applications (nummber of total applications have been reduced)
+# print("Going to remove_applications")
+# remove_full_activities_from_applications()
+# print("Returning from remove_applications")
+# for application in allApplications: 
+#     for name in gruppertTotal[2]:
+#         # DENNE SKAL FJERNES TIL FORDEL FOR BEDRE LOGIKK MED RE-BEREGNING AV GRUPPENE
+#         # fortsett her med å trekke aktiviteter for elever med 2 ønsker
+#         # Sjekk for elever om har mistet ett av ønskene sine. 
+#         # Legg inn funksjon for å rydde bort aktiviteter som er fulle, 
+#             # Eventuelt nedjustere antall ønsker elevene har.
+#         # Kanskje dumt å fortsette å iterere gjennom applications. Den er blitt redusert
+#         pass
         
+
+
 #DEBUG
 counter = 0
 for elev in eleverMedBekreftedeAktiviteter:
@@ -320,12 +471,14 @@ print("Expected applications after 1st pass 407-245=162 ", counter)
 
 # DEBUG
 counter = 0
+print("counting all activities assigned, including 'unassigned' ")
 for activity in fordeling:
 #     for elev in fordeling[activity]:
 #         print(elev, activity)
     print(activity, len(fordeling[activity]))
     counter += len(fordeling[activity])
-print(counter)
+print(counter) 
+print("Remaining applications (if any): \n", allApplications[0])
 #print(fordeling)
     # for i in range(0, maxApplicationsPerStudent):
     #     #print("\n", i , "\n")
