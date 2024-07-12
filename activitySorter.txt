@@ -1,157 +1,59 @@
+Hvis Git-bash ikke funker:
+Aktiver SSH agent:	eval $(ssh-agent -s)
+Add SSH key: 	c:/users/andran0803/.ssh/id-rsa
 
 Notater fra ferien:
 
--> Elever med <2 bekreftede aktiviteter, ser ut til å være påmeldt kun én, eller aktivitetene faller på samme dag. 
-	-> Skriver kode for å bekrefte: korrekt
-
 -> Strukturen på spørreskjemaet bør endres, slik at alle får muligheten til maks antall aktiviteter
-	-> Kino kjøres begge dager, og kan derfor plasseres på passende dag for den enkelte elev.
 
 NESTE: Omarbeid til å sette dagene i Forms, og implementere prioritet for valgene.
 _________________________________________________________________________________________________________________
+FORBEDRING: En del av informasjonen/variablene bør være user-input, eller hentes rett fra Excel-dokumentet
 
-HUSK Å SJEKKE OM ALLE FÅR TO AKTIVITETER PÅ FORSKJELLIGE DAGER!!
+NB: Tror ikke priorityString brukes i denne versjonen.
 
-BUG - elever blir satt opp med flere aktiviteter på samme dag.
-BUG - Ikke alle elever blir sat opp med to aktiviteter
-NB: Er aktiviteten og dagen frigjort fra hverandre? 
-	-> Blir det problemer for aktiviteter som går på flere dager?
-	-> eleverMedBekreftedeAktiviteter bør kanskje være en dict-list-of-tuples for å holde sammen ektivitet og dag for eleven?
+NB: Ikke alle elever blir satt opp med to aktiviteter
 
-Vil kanskje lage kode for å se hvor mange elever som har hver aktivitet som førstevalg? -> Viktig for å fordele aktiviteter på dager, og bestemme hvilke aktiviteter som eventuelt ikke skal gjennomføres.
+-> eleverMedBekreftedeAktiviteter bør kanskje være en dict-list-of-tuples for å holde sammen ektivitet og dag for eleven?
 
-NB! HVORDAN FORDELER VI ØNSKER PÅ DAGER??
--> NOPE Enten: ingen-mandag-tirsdag-begge
--> DENNE! Eller: Sjekker hver application for dag
-	-> Litt vanskelig, blir et stort ekstra søk
-		-> Kan kanskje gjøres mer effektivt ved å legge inn liste med dager i eleverMedBekreftedeAktiviteter
-
+OVERSIKT
 *Hver oppføring i excel-filen er ett ønske
 *Tar inn excel-fil som dataFrame (df) - Den er en dict?
 *Setter maks antall aktiviteter pr elev
 -> maxActivitiesPerStudent (SKAL VÆRE USER INPUT)
 *lager set med alle elever
 -> allePaameldteElever
-* Fordeler ønskerne i "mye" og "litt"
--> prioritetHoy (list of tuples)
--> prioritetLav (list of tuples)
 * Oppretter grupper for aktiviteter
--> fordeling {"emel": [] ...} - dict: list-of-tuples
+-> fordeling {"Frisbee": [] ...} - dict: list-of-tuples
 -> fordelingMax for gruppestørrelse - dict~fordeling
 -> eleverMedBekreftedeAktiviteter - dict over elever med antall bekreftede aktiviteter
 *teller opp antall ønsker for hver elev
--> gruppertTotal (gruppertHoy, gruppertLav)
-?? Lager liste over elever uten prioriterte ønsker (finnes ikke i Excelfilen)
-	Disse fjernes eller plasseres randomly
-	Samme med elevene i 'unresolved'
+-> gruppertTotal 
+*Lager liste over elever uten ønsker 
+	(Plasseres i unassigned.docx)
 * Randomiserer listene med elevønsker
 -> random.shuffle(gruppertTotal[i])
 * Plasserer elever med ett ønske gruppertTotal[1] i aktivitetsgrupper
 * Rydder bort applications for fulle aktiviteter
 -> def remove_full_activities_from_applications()
-!! Blir elever som får fjernet alle sine applications satt i 'unresolved'?
-
 * Lag ny oversikt over elever med ett gjenværende ønske, og ingen plasseringer
 * Plasser elever med flere gjenværende ønsker, prioritet ønsker med HøyPrioritet
 
-Place -> clean -> place -> clean etc. 
+Place -> clean -> place -> clean etc.
 
+Mye rotete og/eller redundant kode, men det virker. 
 
-REMOVED	* Elever uten høyprioritetsønsker, og bare ett lavprioritetsønske flyttes til høyprioritet
-		!! Ønsker ikke å tillate dette i ferdig versjon (men kanskje det er lurt å implementere det likevel? Ingen skade skjedd om det kan håndteres)
-
-!! Pass på at elever ikke blir plassert i samme aktivitet to ganger
-
-
-METODER:
-def clean_duplicate_applications #ignore priority
-def remove_full_activities_from_applications
-def place_students #prioritize students with no/lower placements + one/few wishes
-def count_applications # Remember priorities
-
-? Skal det være ulike grupper for de som er plassert?
 ____________________________________________________________
 TEMP CURRENT: 
-VIKTIG: IMPLEMENTER SJEKK FOR DUPLISERTE ØNSKER -> sjekk med .lower()
-VIKTIG: Revisit break-logikken for repeatFew 
--> Hindre repeatFew å kjøre unødig?
+VIKTIG: IMPLEMENTER SJEKK FOR DUPLISERTE ØNSKER/ELEVER -> sjekk med .lower()
 ! Sjekk hvordan raden med overskrifter håndteres!
 
-clean_applications() er sannsynligvis redundant; fjernes i place_student.
-
 ! Kan de to (few applications) løkkene merges? tror ikke egentlig det
-! Lag tester for om koden funker som forventet.
-	! FIKSET? Elev kan oppføres flere enn maksimum ganger
-	! FIKSET? og elev kan oppføres i samme gruppe flere ganger
-! FIKSET? maxActivities sjekk in place_student ser ikke ut til å kjøre?? linje 161
-# Hva skjer med applications for elver som er fjernet fra allePaameldteElever? 
-	Skal allePaamledteElever brukes til fordelingen?
-		Er det nødvendig, eller kan vi like gjerne bare fjerne applications? -> litt mer effektivt om de fjernes?
-? DONE? Legges fordelt sammen med applications for elever med flere applications?
 
-Tror allePaameldteElever brukes unødvendig i place_student()
-
-!! Revisit logic in studentsWithManyApplications
-! allApplications oppdatere
--> Må bruke place_student()
-
-NB! Det er fargeforskjeller i 'remove' -> Betyr det at den ikke funker som forventet?
-forsøkt fikset: # NB! elever kan ha 0-1 bekreftede aktiviteter, men ingen flere applications!
-	linje 377
-funker 'break' for 'studentsWithFewApplications'? linje 347
-	Hva skjer med variabelen 'testliste', trenger jeg den?
-	Tror den breaker for raskt(?)
-
-while 'runWhileUnassignedRemains' og while 'repeatFew' har vel samme funksjon, egentlig?
-
-Ser ut som run-while-several ikke er effektiv nok: sjekk at den ikke kjører 'few' uten god grunn.
-
-remove_full_activities_from_applications() --> er den redundant med clean_applications? -> Sjekk at logikken er tilsvarende
-Lag gruppert som metode
-* Elever som har fått tildelt maxActivities( eleverMedBekreftedeAktiviteter ) fjernes fra allePåmeldteElever
-	DONE Elever som plasseres i 'unresolved' må fjernes fra allePaameldteElever
-		FUNKER TESTER for def remove_full_activities_from_applications():
-		Er tilhørende applications også fjernet? (Skal være det; elever havner ikke i 'unresolved' om de har flere applications)
-
-innsikt: kan ikke bruke Counter.items() fordi jeg vil ha antallet som key, og ikke elevene
-funksjonen må returnere en verdi
-sjekk at allApplications funker som den skal i funksjonen.
-allApplications = list(set(allApplications)) er midlertidig deaktivert
-FIXED med list() NB! error set is not subscriptable oppstår når kopier av applications fjernes? Ja, må lages til list
-Funksjoner er opprettet. Virker de som forventet?
 ____________________________________________________________
-Må flytte applications til aktivitesgruppe
-Deretter redusere antall applications for aktuell elev
-VIKTIG! Alle data kan settes til lower() før logikken kjøres
-	Må implementere case-insensitivity for logikken.
-Prioritet høy og lav hentes ut ved behov, og er ikke egne list-of-tuples
-Elever uten ønsker, eller 'unresolved' kan eventuelt plasseres randomly
 
-Sliter med å finne/plassere aktivitet/application til elevene
-	Må jeg traversere allApplications en haug med ganger?
-	Kan jeg lage midlertidige lister av applications å traversere?
-	Bør jeg lage grupeprtX om til dict-list-of-tuples?
-
-_____________________________________________________________
-
-Må lage funksjonalitet for å gruppere aktiviteter på dager (-> Redigere aktivitetsnavn t.eks. "voleyball-mandag" ?)
-	Funksjonalitet for å post-hoc fordele aktiviteter på dager? Kan gå gjennom aktivitetene for å fordele på dager når programmet kjøres, starter med fulle/populære aktiviteter
-	(Ønsker ikke å begrense mulighetene før )
-
-Kan/bør jeg endre tuples til dict eller obj for å få søke etter properties på en bedre måte?
-
-Kan lagre slettede applications i en egen variabel/Excelfil for review/manual bugfix (Sortert på navn)
-Kan lage 'unresolved' gruppe til slutt av elever som ikke har maxActivitiesPerStudent. (assignedTo, applications)
 
 USER INPUT: maks_antall_aktiviteter_pr_elev
-USER INPUT: indeks for 'navn', 'klasse', 'aktivitet', 'prioritet', 'venner'
+USER INPUT: indeks for 'navn', 'klasse', 'aktivitet', 'prioritet', ('venner')
 USER INPUT: syntaks for høy/lav prioritet (?)
 docstring som forklarer programmet
-ControlSum for applications og students til user
-WARNING if controlSum fails
-WARNING if students are unassigned
-WARNING if students have no priority applications
-______________________________________________________________
-Eventuelt:
-Implementere numerisk prioritet (antall ønsker er fremdeles relevant)
-kan "generator expressions" erstatte list comprehensions / iterations?

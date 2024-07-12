@@ -248,21 +248,14 @@ while allApplications: # trenger continue(?)
     runWhileUnassignedRemains = True
     #while not all(len(gruppertTotal[group]) == 0 for group in priorityGroupKeys): # "group in gruppertTotal and" kan legges til for mer robust kode (hindrer KeyError)
     # Denne while-setningen feiler fordi assigned legges til gruppert.
-    fewApplicationsLoopCounter = 0
+    fewApplicationsLoopCounter = 0 # Dette kan umulig være bra kode
     # listOfStudentsWithFewApplications har bare gyldighet inni loopen. 
+    # kan jeg bruke while allapplications ? 
     while runWhileUnassignedRemains: # Hva gjør runWhileUnnassigned nå? == runWhileTrue ??
-        fewApplicationsLoopCounter += 1
+        fewApplicationsLoopCounter += 1 # Dette kan umulig være bra kode
         # DEBUG
-        #print("Assigning students with few applications: ", fewApplicationsLoopCounter)
-        # VIKTIG: Er denne feil? Var den feil? Er den feil nå?
         eleverFullyAssigned = [student for student in eleverMedBekreftedeAktiviteter if len(eleverMedBekreftedeAktiviteter) == maxActivitiesPerStudent]
-        # expression for key in dict if condition ==> Bør være len(eleverMedBekreftedeAktiviteter[student]) ??
-#        print("Debug - eleverFullyAssigned: ", eleverFullyAssigned)
-#        print("Debug - len(eleverMedBekreftedeAktiviteter): ", len(eleverMedBekreftedeAktiviteter))
-        #print("Elever fully assigned:\n", eleverFullyAssigned)
-        # Elever som er assigned vil være med her. 
-        # Elever som er fully assigned, vil være fjernet (? sjekk i group_student_applications!)
-        # Vil ha en list-of-lists får å plassere elever med færrest ønsker først.
+        # Vil ha en list-of-lists for å plassere elever med færrest ønsker først.
         listOfStudentsWithFewApplications = [gruppertTotal[gruppe] for gruppe in priorityGroupKeys] # maxActivitiesPerStudent lister med elever 
         # Funker denne som forutsatt? Tviler!
         testliste = [student for listen in listOfStudentsWithFewApplications for student in listen]
@@ -277,7 +270,7 @@ while allApplications: # trenger continue(?)
         # breaks this loop after a few itereations -> should be -> if no student needs priority placement
             # Then goes to random assignment for remaining students
             #redundant nå?
-        if exitCounter2 == 30:
+        if exitCounter2 == 30: # Dette kan umulig være god kode
             break
         exitCounter2 += 1
 #        print("Debug exitCounter: ", debugExitCounter)
@@ -290,31 +283,19 @@ while allApplications: # trenger continue(?)
         # NB! list-of-list er truthy selv om den et tom!
         # listOfStudentsWithFewApplications inkluderer elever som er assigned (gjelder det også fully-assigned?)
         # dvs. den blir aldri False
-            debugBreakCounter += 1
+            debugBreakCounter += 1 # Dette kan umulig være god kode
             if debugBreakCounter == 4:
                 break
-            # print("allApplications: ", len(allApplications))
-            # for i in gruppertTotal:
-            #     if len(gruppertTotal[i]) > 0:
-            #         print(f"gruppertTotal[{i}] {len(gruppertTotal[i])}")
             listIndex = 0
             # Making sure that students with fewer applications are assigned first.
             # Lurer på om listOfStudentsWithFewApplications kaller place_student unødig.
-            #print("Tester at listen er 2 lang:\t", len(listOfStudentsWithFewApplications))
             for i in range(len(listOfStudentsWithFewApplications)): #redundant?
                 if listOfStudentsWithFewApplications[i]:
                     listIndex = i # Usikker på denne logikken; skal det være +1? -> Tror ikke det
                 # Placing student in activity-group according to application
                 #print(f"Length of listOfStudentsWithFewApplications[{listIndex}]: ", len(listOfStudentsWithFewApplications[listIndex]))
                 for student in listOfStudentsWithFewApplications[listIndex]:
-                    #print("PLACING STUDENT LOOP")
-                    #print("fewApplications", len(listOfStudentsWithFewApplications[0]), len(listOfStudentsWithFewApplications[1]))
-                    # Trenger vel ikke returnere allePaamledteElever?
-                    #print("len(fordeling)1: ", sum(len(lst) for lst in fordeling.values()))
                     allApplications, fordeling, eleverMedBekreftedeAktiviteter, allePaameldteElever = place_student(student)
-                    #print("len(fordeling)2: ", sum(len(lst) for lst in fordeling.values()))
-                    # Kontroller at listen regenereres korrekt, spesielt at gruppertTotal[] er oppdatert, og at priorityGroupKeys er korrekt
-                    # pass på at variablene eksisterer i riktig form til å sendes til funksjonen.
             # Students that are fully assigned, no longer have applications in allApplications (some unassigned students may have been removed)
             # Recreating groups of students with number of applications as keys
             gruppertTotal = group_student_applications("") # Sending empty priority string
@@ -337,12 +318,9 @@ while allApplications: # trenger continue(?)
     
     # Itererer over keys (fordi det er en dict) og lager liste av elever som ikke er fully assigned
     # when no student needs priority assignment, this code assignes students in random order (ikke implementert?)
-    # NB! elever kan ha 0-1 bekreftede aktiviteter, men ingen flere applications!
     # allApplications should now contain only applications for students that have more applications than needed to be fully assigned
     setOfUnassignedStudents = set([application[applicationTupleNamePosition] for application in allApplications])
     setOfStudentsWithHighPriorityApplications = set([application[applicationTupleNamePosition] for application in allApplications if application[applicationTuplePriorityPosition] == highPriorityString])
-    #print("Assigning students without fewApplications")
-    # Bruker jeg ikke place_student her??
     for student in setOfUnassignedStudents: 
         highPriorityApplicationExists = False
         fullyAssignedGroupBreak = False
@@ -353,17 +331,14 @@ while allApplications: # trenger continue(?)
                 # Prioritizing high-priority applications
                 if application[applicationTuplePriorityPosition] == highPriorityString or not highPriorityApplicationExists:
                     # Don't need to check for fully-assigned here
-                    # IMPORTANT! return value needed? - Not part of a function (yet), so: NO
-                    #print("Placing student with several applications", len(allApplications))
                     allApplications, fordeling, eleverMedBekreftedeAktiviteter, allePaameldteElever = place_student(student)
                     if len(fordeling[application[applicationTupleActivityPosition]]) == fordelingMax[application[applicationTupleActivityPosition]]:
                         fullyAssignedGroupBreak = True 
                         print("Group full: ", application[applicationTupleActivityPosition]) 
                         break
-        # When a group is full, we need to clean applications and re-ckeckfor few allpications
+        # When a group is full, we need to clean applications and re-ckeck for few applications
         if fullyAssignedGroupBreak: 
             break # for student in listOfUnnassignedStudents
-    #print("Number of remaining applications: ", len(allApplications))
 # end while allApplications
                 
 #print("DEBUG EXIT_COUNTER: ", debugExitCounter)
