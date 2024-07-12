@@ -1,4 +1,30 @@
-dnb tesla: 2326 8050
+
+Notater fra ferien:
+
+-> Elever med <2 bekreftede aktiviteter, ser ut til å være påmeldt kun én, eller aktivitetene faller på samme dag. 
+	-> Skriver kode for å bekrefte: korrekt
+
+-> Strukturen på spørreskjemaet bør endres, slik at alle får muligheten til maks antall aktiviteter
+	-> Kino kjøres begge dager, og kan derfor plasseres på passende dag for den enkelte elev.
+
+NESTE: Omarbeid til å sette dagene i Forms, og implementere prioritet for valgene.
+_________________________________________________________________________________________________________________
+
+HUSK Å SJEKKE OM ALLE FÅR TO AKTIVITETER PÅ FORSKJELLIGE DAGER!!
+
+BUG - elever blir satt opp med flere aktiviteter på samme dag.
+BUG - Ikke alle elever blir sat opp med to aktiviteter
+NB: Er aktiviteten og dagen frigjort fra hverandre? 
+	-> Blir det problemer for aktiviteter som går på flere dager?
+	-> eleverMedBekreftedeAktiviteter bør kanskje være en dict-list-of-tuples for å holde sammen ektivitet og dag for eleven?
+
+Vil kanskje lage kode for å se hvor mange elever som har hver aktivitet som førstevalg? -> Viktig for å fordele aktiviteter på dager, og bestemme hvilke aktiviteter som eventuelt ikke skal gjennomføres.
+
+NB! HVORDAN FORDELER VI ØNSKER PÅ DAGER??
+-> NOPE Enten: ingen-mandag-tirsdag-begge
+-> DENNE! Eller: Sjekker hver application for dag
+	-> Litt vanskelig, blir et stort ekstra søk
+		-> Kan kanskje gjøres mer effektivt ved å legge inn liste med dager i eleverMedBekreftedeAktiviteter
 
 *Hver oppføring i excel-filen er ett ønske
 *Tar inn excel-fil som dataFrame (df) - Den er en dict?
@@ -46,24 +72,24 @@ def count_applications # Remember priorities
 ? Skal det være ulike grupper for de som er plassert?
 ____________________________________________________________
 TEMP CURRENT: 
-VIKTIG: IMPLEMENTER SJEKK FOR DUPLISERTE ØNSKER!
+VIKTIG: IMPLEMENTER SJEKK FOR DUPLISERTE ØNSKER -> sjekk med .lower()
 VIKTIG: Revisit break-logikken for repeatFew 
 -> Hindre repeatFew å kjøre unødig?
+! Sjekk hvordan raden med overskrifter håndteres!
 
 clean_applications() er sannsynligvis redundant; fjernes i place_student.
 
 ! Kan de to (few applications) løkkene merges? tror ikke egentlig det
 ! Lag tester for om koden funker som forventet.
-	! Elev kan oppføres flere enn maksimum ganger
-	! og elev kan oppføres i samme gruppe flere ganger
-! maxActivities sjekk in place_student ser ikke ut til å kjøre?? linje 161
+	! FIKSET? Elev kan oppføres flere enn maksimum ganger
+	! FIKSET? og elev kan oppføres i samme gruppe flere ganger
+! FIKSET? maxActivities sjekk in place_student ser ikke ut til å kjøre?? linje 161
 # Hva skjer med applications for elver som er fjernet fra allePaameldteElever? 
 	Skal allePaamledteElever brukes til fordelingen?
 		Er det nødvendig, eller kan vi like gjerne bare fjerne applications? -> litt mer effektivt om de fjernes?
-? Legges fordelt sammen med applications for elever med flere applications?
+? DONE? Legges fordelt sammen med applications for elever med flere applications?
 
-Tror allePaameldteElever brukes unødvendig i place_strudent()
-clean_applications() og place_student() er de redundante?
+Tror allePaameldteElever brukes unødvendig i place_student()
 
 !! Revisit logic in studentsWithManyApplications
 ! allApplications oppdatere
@@ -73,7 +99,7 @@ NB! Det er fargeforskjeller i 'remove' -> Betyr det at den ikke funker som forve
 forsøkt fikset: # NB! elever kan ha 0-1 bekreftede aktiviteter, men ingen flere applications!
 	linje 377
 funker 'break' for 'studentsWithFewApplications'? linje 347
-	Hva skjer med variabelne 'testliste', trenger jeg den?
+	Hva skjer med variabelen 'testliste', trenger jeg den?
 	Tror den breaker for raskt(?)
 
 while 'runWhileUnassignedRemains' og while 'repeatFew' har vel samme funksjon, egentlig?
